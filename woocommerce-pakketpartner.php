@@ -12,14 +12,17 @@
  */
 
 if (in_array('woocommerce-pakketpartner/woocommerce-pakketpartner.php', apply_filters('active_plugins', get_option('active_plugins')))) {
+
     add_action('woocommerce_shipping_init', 'pakketpartner_init');
+
     function pakketpartner_init()
     {
         require_once('includes/pp-shipping-method.php');
     }
 
     add_filter('woocommerce_get_settings_shipping', 'add_pakketpartner_settings', 10, 2);
-    function add_pakketpartner_settings($settings, $section)
+
+    function add_pakketpartner_settings($settings)
     {
         $settings[] = [
             'title' => 'Pakketparter opties',
@@ -46,7 +49,7 @@ if (in_array('woocommerce-pakketpartner/woocommerce-pakketpartner.php', apply_fi
 
             $result = json_decode(curl_exec($ch));
 
-            if (!$result) {
+            if ($result === false) {
                 $settings['api-key-setting']['desc'] = '(Ongeldige API key)';
             } else {
                 $settings['api-key-setting']['desc'] = '(Geldige API key)';
@@ -62,6 +65,7 @@ if (in_array('woocommerce-pakketpartner/woocommerce-pakketpartner.php', apply_fi
     }
 
     add_filter('woocommerce_shipping_methods', 'pp_add_pakketpartner');
+
     function pp_add_pakketpartner($methods)
     {
         $ch = curl_init();
@@ -74,7 +78,9 @@ if (in_array('woocommerce-pakketpartner/woocommerce-pakketpartner.php', apply_fi
 
         $result = json_decode(curl_exec($ch));
 
-        if (!$result) {
+        curl_close($ch);
+
+        if ($result === false) {
             return;
         }
 
@@ -95,6 +101,7 @@ if (in_array('woocommerce-pakketpartner/woocommerce-pakketpartner.php', apply_fi
     }
 
     add_action('woocommerce_after_checkout_form', 'pp_load_pickup_logic', 10);
+
     function pp_load_pickup_logic()
     {
         ?>
@@ -110,6 +117,7 @@ if (in_array('woocommerce-pakketpartner/woocommerce-pakketpartner.php', apply_fi
     }
 
     add_action('woocommerce_after_order_notes', 'pp_add_custom_checkout_fields');
+
     function pp_add_custom_checkout_fields($checkout)
     {
         echo '<div style="display:none">';
@@ -128,6 +136,7 @@ if (in_array('woocommerce-pakketpartner/woocommerce-pakketpartner.php', apply_fi
     }
 
     add_action('woocommerce_checkout_update_order_meta', 'pp_update_order_meta');
+
     function pp_update_order_meta($order_id)
     {
         if (!empty($_POST['pp_pickup_location_hash'])) {
@@ -143,10 +152,8 @@ if (in_array('woocommerce-pakketpartner/woocommerce-pakketpartner.php', apply_fi
         }
     }
 
-    /** ************** **/
-    /** ADMINISTRATOR **/
-
     add_action('woocommerce_admin_order_data_after_shipping_address', 'pp_show_shipment_details_in_admin', 10, 1);
+
     function pp_show_shipment_details_in_admin($order)
     {
         echo '<p><strong>Afhaallocatie:</strong> <br/> ' . get_post_meta($order->id, 'pp_pickup_location_name', true) . '</p>';
@@ -156,14 +163,15 @@ if (in_array('woocommerce-pakketpartner/woocommerce-pakketpartner.php', apply_fi
     }
 
     add_filter('woocommerce_admin_order_actions', 'create_shipment_ajax_requests', PHP_INT_MAX, 2);
-    function create_shipment_ajax_requests($actions, $order)
+
+    function create_shipment_ajax_requests($actions)
     {
         ?>
         <script>
             jQuery(function ($) {
                 if (typeof loaded == 'undefined') {
                     $('.request-label').unbind('click').click(function (e) {
-                        url = $(this).attr('href');
+                        var url = $(this).attr('href');
                         $(this).addClass('loading');
                         e.preventDefault();
 
@@ -172,8 +180,7 @@ if (in_array('woocommerce-pakketpartner/woocommerce-pakketpartner.php', apply_fi
                             dataType: 'json',
                             url: url,
                             success: function (response) {
-                                if (!response.success) {
-                                    // TODO: Show a nice message instead of a default alertbox
+                                if (!response.success == true) {
                                     alert(response.data);
                                     location.reload();
                                 } else {
@@ -193,6 +200,7 @@ if (in_array('woocommerce-pakketpartner/woocommerce-pakketpartner.php', apply_fi
     }
 
     add_filter('woocommerce_admin_order_actions', 'add_pakketpartner_request_and_print_button', PHP_INT_MAX, 2);
+
     function add_pakketpartner_request_and_print_button($actions, $the_order)
     {
         $actions['request_label'] = [
@@ -214,6 +222,7 @@ if (in_array('woocommerce-pakketpartner/woocommerce-pakketpartner.php', apply_fi
     }
 
     add_action('admin_head', 'pakketpartner_request_and_print_button_css');
+
     function pakketpartner_request_and_print_button_css()
     {
         $requestLabelIconUrl = dirname(plugin_dir_url(__FILE__)) . '/woocommerce-pakketpartner/assets/icons/label-icon.png';

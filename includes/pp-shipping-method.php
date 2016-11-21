@@ -24,16 +24,16 @@ class PP_Shipping_Method extends WC_Shipping_Method
 
         $this->method_title = $this->title;
         $this->method_description = 'Verzendmethode ' . $this->title;
-        $this->supports = array(
+        $this->supports = [
             'shipping-zones',
             'instance-settings',
             'instance-settings-modal',
-        );
+        ];
 
         $this->init();
 
         add_action('woocommerce_shipping_zone_method_added', [$this, 'save_default_options']);
-        add_action('woocommerce_update_options_shipping_' . $this->id, array($this, 'process_admin_options'));
+        add_action('woocommerce_update_options_shipping_' . $this->id, [$this, 'process_admin_options']);
     }
 
     public function save_default_options($instanceId)
@@ -45,22 +45,22 @@ class PP_Shipping_Method extends WC_Shipping_Method
 
     public function init()
     {
-        $this->instance_form_fields = array(
-            'title' => array(
+        $this->instance_form_fields = [
+            'title' => [
                 'title' => 'Titel',
                 'type' => 'text',
                 'description' => 'Dit is de titel die klanten te zien krijgen in de checkout',
                 'default' => $this->title,
                 'desc_tip' => true,
-            ),
-            'cost' => array(
+            ],
+            'cost' => [
                 'title' => 'Prijs',
                 'type' => 'text',
                 'placeholder' => '',
                 'default' => '0',
                 'desc_tip' => true,
-            ),
-        );
+            ],
+        ];
 
         $title = $this->get_option('title');
         if ($title) {
@@ -69,14 +69,14 @@ class PP_Shipping_Method extends WC_Shipping_Method
         $this->cost = $this->get_option('cost');
     }
 
-    public function calculate_shipping($package = array())
+    public function calculate_shipping($package = [])
     {
-        $rate = array(
+        $rate = [
             'id' => $this->get_rate_id(),
             'label' => $this->title,
             'cost' => $this->cost,
             'package' => $package,
-        );
+        ];
 
         $this->add_rate($rate);
 
